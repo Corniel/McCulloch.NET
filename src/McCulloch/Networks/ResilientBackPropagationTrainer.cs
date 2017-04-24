@@ -1,21 +1,22 @@
-﻿using McCulloch.Activation;
-using McCulloch.Matrices;
+﻿using McCulloch.Matrices;
 using System;
-using System.Linq;
-using Troschuetz.Random.Generators;
 
 namespace McCulloch.Networks
 {
 	public static class ResilientBackPropagationTrainer
 	{
-		private const int SignPositive = 1;
+		private const int SignPositive = +1;
 		private const int SignNegative = -1;
 
-		public static NeuralNetwork<T> Train<T>(NeuralNetworkSettings settings, double[][] trainData, int maxEpochs) where T : class
+		/// <summary>Trains the <see cref="NeuralNetwork{T}"/>.</summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="settings"></param>
+		/// <param name="trainData"></param>
+		/// <returns></returns>
+		public static NeuralNetwork<T> Train<T>(NeuralNetworkSettings settings, double[][] trainData) where T : class
 		{
 			var network = new NeuralNetwork<T>(settings);
 
-			var inputSize = network.InputSize;
 			var hiddenSize = network.HiddenSize;
 			var outputSize = network.OutputSize;
 
@@ -27,29 +28,21 @@ namespace McCulloch.Networks
 
 			var previous = new NeuralNetwork<T>(settings);
 
-			var initMin = 0.0001;
-			var initMax = 0.0010;
-
-			network.Randomize(settings.Rnd, initMin, initMax);
+			network.Randomize(settings.Rnd, settings.InitMin, settings.InitMax);
 
 			// must save previous weight deltas
 
 			var deltas = new NeuralNetwork<T>(settings);
 			deltas.Fill(0.01);
 
-			var etaPlus = settings.EtaPlus;
-			var etaMinus = settings.EtaMinus;
-			var deltaMax = settings.DeltaMax;
-			var deltaMin = settings.DeltaMin;
-
-			for (var epoch = 0; epoch < maxEpochs; epoch++)
+			for (var interarion = 0; interarion < settings.MaximumIterations; interarion++)
 			{
-
 				// 1. compute and accumulate all gradients
 				// zero-out values from prev iteration
 				gradiant.Clear();
 
-				for (int row = 0; row < trainData.Length; ++row)  // walk thru all training data
+				// walk through all training data
+				for (int row = 0; row < trainData.Length; row++)
 				{
 					var input = trainData[row];
 					network.Predict(input, hidden, output);
@@ -83,9 +76,9 @@ namespace McCulloch.Networks
 			var deltaMax = settings.DeltaMax;
 			var deltaMin = settings.DeltaMin;
 
-			for (int i = 0; i < current.InputSize; i++)
+			for (var i = 0; i < current.InputSize; i++)
 			{
-				for (int h = 0; h < current.HiddenSize; h++)
+				for (var h = 0; h < current.HiddenSize; h++)
 				{
 					var sign = Math.Sign(previous.I2H[i, h] * gradiant.I2H[i, h]);
 
@@ -247,41 +240,41 @@ namespace McCulloch.Networks
 			var deltaMax = settings.DeltaMax;
 			var deltaMin = settings.DeltaMin;
 
-			for (int i = 0; i < network.OutputSize; ++i)
+			for (var o = 0; o < network.OutputSize; ++o)
 			{
-				var sign = Math.Sign(previous.OBias[i] * gradiant.OBias[i]);
+				var sign = Math.Sign(previous.OBias[o] * gradiant.OBias[o]);
 
 				// no sign change, increase delta
 				if (sign == SignPositive) 
 				{
-					delta = deltas.OBias[i] * etaPlus; // compute delta
+					delta = deltas.OBias[o] * etaPlus; // compute delta
 					if (delta > deltaMax)
 					{
 						delta = deltaMax;
 					}
-					network.OBias[i] += GetMagnitude(gradiant.OBias[i], delta); // update
+					network.OBias[o] += GetMagnitude(gradiant.OBias[o], delta); // update
 				}
 
 				// grad changed sign, decrease delta
 				else if (sign == SignNegative)
 				{
-					delta = deltas.OBias[i] * etaMinus; // the delta (not used, but saved later)
+					delta = deltas.OBias[o] * etaMinus; // the delta (not used, but saved later)
 					if (delta < deltaMin)
 					{
 						delta = deltaMin;
 					}
-					network.OBias[i] -= deltas.OBias[i]; // revert to previous weight
-					gradiant.OBias[i] = 0; // forces next branch, next iteration
+					network.OBias[o] -= deltas.OBias[o]; // revert to previous weight
+					gradiant.OBias[o] = 0; // forces next branch, next iteration
 				}
 
 				// this happens next iteration after 2nd branch above (just had a change in gradient)
 				else
 				{
-					delta = deltas.OBias[i]; // no change to delta
-					network.OBias[i] += GetMagnitude(gradiant.HBias[i], delta); // update
+					delta = deltas.OBias[o]; // no change to delta
+					network.OBias[o] += GetMagnitude(gradiant.HBias[o], delta); // update
 				}
-				deltas.OBias[i] = delta;
-				previous.OBias[i] = gradiant.OBias[i];
+				deltas.OBias[o] = delta;
+				previous.OBias[o] = gradiant.OBias[o];
 			}
 		}
 
@@ -289,22 +282,22 @@ namespace McCulloch.Networks
 		{
 			// compute the h-o gradient term/component as in regular back-prop
 			// this term usually is lower case Greek delta but there are too many other deltas below
-			for (int i = 0; i < network.OutputSize; ++i)
+			for (var o = 0; o < network.OutputSize; o++)
 			{
-				double derivative = (1 - output[i]) * output[i]; // derivative of softmax = (1 - y) * y (same as log-sigmoid)
-				gradiant.Output[i] = derivative * (output[i] - input[network.InputSize + i]); // careful with O-T vs. T-O, O-T is the most usual
+				double derivative = (1 - output[o]) * output[o]; // derivative of softmax = (1 - y) * y (same as log-sigmoid)
+				gradiant.Output[o] = derivative * (output[o] - input[network.InputSize + o]); // careful with O-T vs. T-O, O-T is the most usual
 			}
 
 			// compute the i-h gradient term/component as in regular back-prop
-			for (int i = 0; i < network.HiddenSize; ++i)
+			for (var h = 0; h < network.HiddenSize; h++)
 			{
-				double derivative = network.Fx.Derivative(hidden[i]); // (1 - hOutputs[i]) * (1 + hOutputs[i]); // derivative of tanh = (1 - y) * (1 + y)
-				double sum = 0.0;
-				for (int j = 0; j < network.OutputSize; ++j) // each hidden delta is the sum of numOutput terms
+				double derivative = network.Fx.Derivative(hidden[h]);
+				double sum = 0;
+				for (var o = 0; o < network.OutputSize; ++o) // each hidden delta is the sum of numOutput terms
 				{
-					sum += gradiant.Output[j] * network.H2O[i, j]; ;
+					sum += gradiant.Output[o] * network.H2O[h, o]; ;
 				}
-				gradiant.Hidden[i] = derivative * sum;
+				gradiant.Hidden[h] = derivative * sum;
 			}
 
 			// add input to h-o component to make h-o weight gradients, and accumulate
