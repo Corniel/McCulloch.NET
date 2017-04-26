@@ -28,25 +28,19 @@ namespace McCulloch.UnitTests.Networks
 			var settings = new NeuralNetworkSettings
 			{
 				Fx = ActivationFunction.HyperbolicTangent,
-				//Fx = ActivationFunction.Softsign,
 				Rnd = new MT19937Generator(),
 				HiddenNodes = 3
 			};
-
-			var model = typeof(IrisData).GetModelInfo();
 
 			var training = new List<IrisData>();
 			var test = new List<IrisData>();
 			var splitter = new DataSplitter(settings.Rnd);
 			splitter.Split(IrisData.Load(), training, test);
 
-			var trainData = FillData(model, training);
-			var testData = FillData(model, test);
-
 			NeuralNetwork<IrisData> act = null;
 			Speed.Test((index) =>
 			{
-				act = ResilientBackPropagationTrainer.Train<IrisData>(settings, trainData);
+				act = ResilientBackPropagationTrainer.Train(training, settings);
 			});
 
 			var verifier = new IrisDataVerifier(act);
@@ -79,20 +73,15 @@ namespace McCulloch.UnitTests.Networks
 				HiddenNodes = 4
 			};
 
-			var model = typeof(IrisData2).GetModelInfo();
-
 			var training = new List<IrisData2>();
 			var test = new List<IrisData2>();
 			var splitter = new DataSplitter(settings.Rnd);
 			splitter.Split(IrisData2.Load(), training, test);
 
-			var trainData = FillData(model, training);
-			var testData = FillData(model, test);
-
 			NeuralNetwork<IrisData2> act = null;
 			Speed.Test((index) =>
 			{
-				act = ResilientBackPropagationTrainer.Train<IrisData2>(settings, trainData);
+				act = ResilientBackPropagationTrainer.Train(training, settings);
 			});
 
 			var verifier = new IrisData2Verifier(act);
@@ -104,52 +93,6 @@ namespace McCulloch.UnitTests.Networks
 			Percentage minimum = 0.67;
 
 			Assert.Greater(score, minimum);
-		}
-
-		private static double[][] FillData(ModelInfo model, List<IrisData> training)
-		{
-			var data = new double[training.Count][];
-			var pos = 0;
-			foreach (var rec in training)
-			{
-				var input = new double[model.InputSize + model.OutputSize];
-				
-				var index = 0;
-				foreach (var node in model.Input)
-				{
-					index = node.Fill(rec, input, index);
-				}
-				foreach (var node in model.Output)
-				{
-					index = node.Fill(rec, input, index);
-				}
-				data[pos++] = input;
-			}
-
-			return data;
-		}
-
-		private static double[][] FillData(ModelInfo model, List<IrisData2> training)
-		{
-			var data = new double[training.Count][];
-			var pos = 0;
-			foreach (var rec in training)
-			{
-				var input = new double[model.InputSize + model.OutputSize];
-
-				var index = 0;
-				foreach (var node in model.Input)
-				{
-					index = node.Fill(rec, input, index);
-				}
-				foreach (var node in model.Output)
-				{
-					index = node.Fill(rec, input, index);
-				}
-				data[pos++] = input;
-			}
-
-			return data;
 		}
 
 		[TestCase(/*   */-10f, 0.1, +0.1)]

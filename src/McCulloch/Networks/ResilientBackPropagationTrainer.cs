@@ -1,19 +1,57 @@
 ﻿using McCulloch.Matrices;
+using McCulloch.Modeling;
 using System;
+using System.Collections.Generic;
 
 namespace McCulloch.Networks
 {
+	/// <summary>Represents a resilient back propagation trainer.</summary>
 	public static class ResilientBackPropagationTrainer
 	{
 		private const int SignPositive = +1;
 		private const int SignNegative = -1;
 
 		/// <summary>Trains the <see cref="NeuralNetwork{T}"/>.</summary>
+		/// <typeparam name="T">
+		/// The type of the training data records.
+		/// </typeparam>
+		/// <param name="training">
+		/// The training records
+		/// </param>
+		/// <param name="settings">
+		/// The settings for the trainer.
+		/// </param>
+		public static NeuralNetwork<T> Train<T>(ICollection<T> training, NeuralNetworkSettings settings) where T : class
+		{
+			var model = typeof(T).GetModelInfo();
+
+			var data = new double[training.Count][];
+			var pos = 0;
+			foreach (var rec in training)
+			{
+				var input = new double[model.InputSize + model.OutputSize];
+
+				var index = 0;
+				foreach (var node in model.Input)
+				{
+					index = node.Fill(rec, input, index);
+				}
+				foreach (var node in model.Output)
+				{
+					index = node.Fill(rec, input, index);
+				}
+				data[pos++] = input;
+			}
+
+			return Train<T>(data, settings);
+		}
+
+		/// <summary>Trains the <see cref="NeuralNetwork{T}"/>.</summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="settings"></param>
 		/// <param name="trainData"></param>
 		/// <returns></returns>
-		public static NeuralNetwork<T> Train<T>(NeuralNetworkSettings settings, double[][] trainData) where T : class
+		private static NeuralNetwork<T> Train<T>(double[][] trainData, NeuralNetworkSettings settings) where T : class
 		{
 			var network = new NeuralNetwork<T>(settings);
 
