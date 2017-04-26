@@ -9,9 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McCulloch.UnitTests", "test
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{E2F5DB0E-B599-4227-BC80-62115CF76E70}"
 	ProjectSection(SolutionItems) = preProject
-		.gitattributes = ..\.gitattributes
-		.gitignore = ..\.gitignore
-		README.md = ..\README.md
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Xamples", "other\Xamples\Xamples.csproj", "{8B13EF8A-7436-4E61-8EEC-133AFDC3991E}"
