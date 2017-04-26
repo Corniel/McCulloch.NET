@@ -46,7 +46,7 @@ namespace McCulloch.UnitTests.Networks
 			NeuralNetwork<IrisData> act = null;
 			Speed.Test((index) =>
 			{
-				act = ResilientBackPropagationTrainer.Train<IrisData>(settings, trainData, 1000);
+				act = ResilientBackPropagationTrainer.Train<IrisData>(settings, trainData);
 			});
 
 			var verifier = new IrisDataVerifier(act);
@@ -92,7 +92,7 @@ namespace McCulloch.UnitTests.Networks
 			NeuralNetwork<IrisData2> act = null;
 			Speed.Test((index) =>
 			{
-				act = ResilientBackPropagationTrainer.Train<IrisData2>(settings, trainData, 1000);
+				act = ResilientBackPropagationTrainer.Train<IrisData2>(settings, trainData);
 			});
 
 			var verifier = new IrisData2Verifier(act);

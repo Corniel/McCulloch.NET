@@ -3,11 +3,8 @@ using McCulloch.Matrices;
 using McCulloch.Networks;
 using NUnit.Framework;
 using Qowaiv;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Troschuetz.Random.Generators;
 
 namespace McCulloch.UnitTests.Networks
